@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-if [ $1 ]
+if [ "$1" ]
 then
 	ffmpeg -i "$1" -f s32le -ar 44100 -ac 1 -y tmp1.wav
 	ffmpeg -f f32le -i tmp1.wav -y tmp2.wav
