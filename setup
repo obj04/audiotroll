@@ -1,0 +1,70 @@
+#!/usr/bin/env bash
+
+source tui
+
+APP_NAME="audiotroll"
+
+function assert {
+	echo -en "\033[0mChecking for \033[1m$1\033[0m... "
+	which $1 &> /dev/null
+	result=$?
+	[ $result -eq 0 ] && echo -e "\033[32mpresent\033[0m" || echo -e "\033[31mabsent\033[0m"
+	return $result
+}
+
+function install-dependencies {
+	menu "What package manager is your system using?" "APT (Debian)" "Pacman (Arch)" "Zypper (SUSE)" "I'll install the dependencies myself."
+	case $? in
+		1)	sudo apt install $@;;
+		2)	sudo pacman -S $@;;
+		3)	sudo zypper inst $@;;
+		4)	return 1;;
+	esac
+}
+
+function local-install {
+	mkdir -p ~/.local/bin/
+	cp $APP_NAME ~/.local/bin/
+	mkdir -p ~/.local/lib/$APP_NAME/
+	cp tui ~/.local/lib/$APP_NAME/
+}
+
+
+
+[ -x ~/.local/bin/$APP_NAME ] && local-install && echo "Update has been completed." && exit
+echo "You are about to install a software on your computer."
+read -p "Do you wish to install its dependencies (ffmpeg) and start setup? (y/N)" -sn1 choice
+echo -e "\n"
+case $choice in
+		y|Y)
+			packages=""
+			assert "ffmpeg" || packages="${packages} ffmpeg"
+			[ -z ${packages} ] || install-dependencies ${packages};
+			[ $? -ne 0 ] && exit 1;;
+		*)
+			echo "Okay, aborting."
+			exit 1;;
+esac
+echo $'\n'
+
+menu "Do you prefer a local installation?" "Yes, install to ~/.local/" "No, install for all users"
+local_installation=$?
+echo $'\n'
+[ $local_installation -eq 255 ] && echo -e "Okay, aborting." && exit 1
+if [ $local_installation -eq 0 ]
+then
+	local-install
+else
+	function root-install {
+		mkdir -p /usr/bin/
+		cp $APP_NAME /usr/bin/
+		mkdir -p /usr/lib/$APP_NAME/
+		cp tui /usr/lib/$APP_NAME/
+	}
+	sudo root-install
+	unset root-install
+fi
+mkdir -p ~/.config/$APP_NAME/
+
+echo "Installation has been completed."
+

@@ -1,0 +1,145 @@
+#!/usr/bin/env bash
+
+function menu {
+	local title=$1
+	shift
+	local choices=$#
+
+	trap 'echo -e "\033[u\033[${choices}B\033[0m"; cleanup; return 255' 2
+	stty -echo -icanon time 0 min 0
+	for i in $( seq $(( choices + 2 )) )
+	do
+		echo
+	done
+	echo -en "\033[$(( $choices + 2 ))A\033[J"
+	echo -e "\033[1m$title"
+	for i in $( seq $( echo -n $title | wc -c ) )
+	do echo -n "*"
+	done
+	echo -en "\n\033[s\n"
+	for i in $( seq $choices )
+	do
+		echo -en "\033[1m( )\033[0m" $1
+		[ $i -ne $choices ] && echo
+		shift
+	done
+
+	local pos=0
+	local key="?"
+	until [ "$key" = $'\r' ]
+	do
+		select-entry $pos
+		echo -en "\033[92m*"
+		key="$( wait-key )"
+		if [ "$key" = $'\033[A' ] && [ $pos -gt 0 ]
+		then
+			select-entry $pos
+			echo -en "\033[0m "
+			let pos--
+		fi
+		if [ "$key" = $'\033[B' ] && [ $pos -lt $(( $choices - 1 )) ]
+		then
+			select-entry $pos
+			echo -en "\033[0m "
+			let pos++
+		fi
+	done
+	echo -e "\033[u\033[${choices}B\033[0m"
+	cleanup
+	return $pos
+}
+
+function multi-menu {
+	local title=$1
+	shift
+	local choices=$#
+
+	if [ -z $selection ]
+	then
+		for (( i = 0; i < choices; i++ ))
+		do selection[$i]=0
+		done
+	fi
+
+	trap 'echo -e "\033[u\033[${choices}B\033[0m"; cleanup; return 255' 2
+	stty -echo -icanon time 0 min 0
+	for i in $( seq $(( choices + 2 )) )
+	do
+		echo
+	done
+	echo -en "\033)0\033[$(( $choices + 2 ))A\033[J"
+	echo -e "\033[1m$title"
+	for i in $( seq $( echo -n $title | wc -c ) )
+	do echo -n "*"
+	done
+	echo -en "\n\033[s\n"
+	for i in $( seq $choices )
+	do
+		echo -en "\033[1m[ ]\033[0m" $1
+		[ $i -ne $choices ] && echo
+		shift
+	done
+	
+	local pos=0
+	local key="?"
+	local char
+	until [ "$key" = $'\r' ]
+	do
+		select-entry $pos
+		char=$( [ ${selection[$pos]} -eq 1 ] && echo -en "\033[92m\016\x60\017" || echo -en " " )
+		echo -en "\033[0;7m${char}\033[0m"
+		key=$( wait-key )
+		if [ "$key" = " " ]
+		then
+			[ ${selection[$pos]} -eq 1 ] && selection[$pos]=0 || selection[$pos]=1
+		fi
+		if [ "$key" = $'\033[A' ] && [ $pos -gt 0 ]
+		then
+			select-entry $pos
+			[ ${selection[$pos]} -eq 1 ] && echo -en "\033[92m\016\x60\017" || echo -en "\033[0m "
+			let pos--
+		fi
+		if [ "$key" = $'\033[B' ] && [ $pos -lt $(( $choices - 1 )) ]
+		then
+			select-entry $pos
+			[ ${selection[$pos]} -eq 1 ] && echo -en "\033[92m\016\x60\017" || echo -en "\033[0m "
+			let pos++
+		fi
+	done
+	echo -e "\033[u\033[${choices}B\033[0m"
+	cleanup
+}
+
+function select-entry {
+	echo -en "\033[u\033[1C\033[$(( $1 + 1 ))B"
+}
+
+function wait-key {
+	local result=""
+	until [ ${#result} != 0 ]
+	do
+		result=$( get-key )
+	done
+	echo -n "$result"
+}
+
+function get-key {
+	local timeout=${1:-0.02}
+	local retval=0
+	local input=""
+	local char
+	until [ $retval = 142 ]
+	do
+		read -t $timeout -rsN1 char
+		retval=$?
+		[ "$char" = $'\n' ] && char=$'\r'
+		input="${input}${char}"
+	done
+	echo -n "$input"
+}
+
+function cleanup {
+	stty sane
+	trap 2
+}
+

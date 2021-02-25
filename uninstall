@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+
+APP_NAME="audiotroll"
+
+read -p "Do you want to uninstall this software? (y/N)" -sn1 choice
+echo
+case $choice in
+	y|Y)
+		[ $( which $APP_NAME | sed 's/^\(.*\/\)..*/\1/' ) = "/usr/bin" ] && local_installation=0 || local_installation=1
+		if [ $local_installation -eq 1 ]
+		then
+			rm ~/.local/bin/$APP_NAME
+			rm -r ~/.local/lib/$APP_NAME/
+			rm -r ~/.config/$APP_NAME/
+		else
+			function root-remove {
+				rm /usr/bin/$APP_NAME
+				rm -r /usr/lib/$APP_NAME/
+			}
+			sudo root-remove
+			unset root-remove
+			rm -r ~/.config/$APP_NAME/
+		fi
+		echo "Removal has been performed.";;
+	*)
+		echo "Okay, aborting";;
+esac
+
