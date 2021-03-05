@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
+ffmpeg () {
+	command ffmpeg -hide_banner "$@"
+}
+
 if [ "$1" ]
 then
 	ffmpeg -i "$1" -f s32le -ac 1 -y pipe:1 | \
@@ -8,3 +12,5 @@ then
 else
 	echo "Usage: audiotroll <input file>"
 fi
+
+# das objekt stinkt
