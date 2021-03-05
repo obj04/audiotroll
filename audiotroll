@@ -6,10 +6,9 @@ ffmpeg () {
 
 if [ "$1" ]
 then
-	ffmpeg -f s32le -i "$1" -ar 44100 -ac 1 -y tmp1.wav
-	ffmpeg -f f32le -i tmp1.wav -y tmp2.wav
-	ffmpeg -i tmp2.wav -f mp3 -y trolled.mp3
-	rm tmp1.wav tmp2.wav
+	ffmpeg -i "$1" -f s32le -ac 1 -y pipe:1 | \
+	ffmpeg -f f32le -i pipe:0 -f wav -y pipe:1 | \
+	ffmpeg -i pipe:0 -f mp3 -y trolled.mp3
 else
 	echo "Usage: audiotroll <input file>"
 fi
