@@ -24,7 +24,7 @@ function install-dependencies {
 
 function local-install {
 	mkdir -p ~/.local/bin/
-	cp $APP_NAME ~/.local/bin/
+	cp audiotroll videotroll ~/.local/bin/
 	mkdir -p ~/.local/lib/$APP_NAME/
 	cp tui ~/.local/lib/$APP_NAME/
 }
@@ -57,7 +57,7 @@ then
 else
 	function root-install {
 		mkdir -p /usr/bin/
-		cp $APP_NAME /usr/bin/
+		cp audiotroll videotroll /usr/bin/
 		mkdir -p /usr/lib/$APP_NAME/
 		cp tui /usr/lib/$APP_NAME/
 	}

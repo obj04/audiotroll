@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
 
+out=${2:-"trolled.mp3"}
+
 if [ "$1" ]
 then
 	ffmpeg -i "$1" -f s32le -ac 1 -y pipe:1 | \
 	ffmpeg -f f32le -i pipe:0 -f wav -y pipe:1 | \
-	ffmpeg -i pipe:0 -f mp3 -y trolled.mp3
+	ffmpeg -i pipe:0 -f mp3 -y "$out"
 else
-	echo "Usage: audiotroll <input file>"
+	echo "Usage: audiotroll <input file> [output file]"
 fi

@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+out=${2:-"trolled.webm"}
+
+if [ "$1" ]
+then
+	audiotroll "$1"
+	ffmpeg -i "$1" -i trolled.mp3 -map 0:v:0 -map 1:a:0 -c:v libvpx-vp9 -crf 30 -b:v 0 -b:a 128k -c:a libopus -y "$out"
+	rm trolled.mp3
+else
+	echo "Usage: videotroll <input file> [output file]"
+fi
